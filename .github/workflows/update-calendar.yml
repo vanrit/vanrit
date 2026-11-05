@@ -1,0 +1,30 @@
+name: Update contribution calendar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out profile repository
+        uses: actions/checkout@v4
+      - name: Generate calendar from GitHub GraphQL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: vanrit
+        run: python3 scripts/build_contributions.py
+      - name: Commit calendar when changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/contributions.svg
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: refresh contribution calendar"
+            git push
+          fi
